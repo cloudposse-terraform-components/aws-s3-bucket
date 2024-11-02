@@ -1,0 +1,3 @@
+# Note, this can be removed later. Currently keeps PR's easier to review
+**/*.md linguist-documentation=true
+**/README.md linguist-generated=true

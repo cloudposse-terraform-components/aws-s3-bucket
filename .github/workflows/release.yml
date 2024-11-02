@@ -1,0 +1,16 @@
+---
+name: release
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  component:
+    uses: cloudposse-terraform-components/.github/.github/workflows/shared-release-branches.yml@main
+    secrets: inherit
