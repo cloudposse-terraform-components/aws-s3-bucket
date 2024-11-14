@@ -1,0 +1,12 @@
+# https://github.com/crate-ci/typos
+
+[files]
+extend-exclude = [
+ "*.xml",
+]
+
+[default]
+extend-ignore-identifiers-re = []
+
+[default.extend-words] # Don't correct
+ue = "ue" # environment name
