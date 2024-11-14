@@ -1,11 +1,7 @@
 # Upstream changes from _extends are only recognized when modifications are made to this file in the default branch.
 _extends: .github
 repository:
-  name: template
-  description: Template for Terraform Components
+  name: aws-s3-bucket
+  description: This component is responsible for provisioning S3 buckets
   homepage: https://cloudposse.com/accelerate
   topics: terraform, terraform-component
-
-
-
-
