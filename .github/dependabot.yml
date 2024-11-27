@@ -1,0 +1,53 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: /
+  labels:
+    - dependencies
+    - go
+    - no-release
+  schedule:
+    interval: weekly
+    day: sunday
+  ignore:
+    - dependency-name: "*"
+      update-types: ["version-update:semver-major"]
+
+- package-ecosystem: github-actions
+  open-pull-requests-limit: 3
+  directory: /
+  labels:
+    - dependencies
+    - github-actions
+    - no-release
+  groups:
+    cicd:
+      patterns:
+        - "*"
+  schedule:
+    interval: weekly
+    day: sunday
+  ignore:
+    - dependency-name: "*"
+      update-types: ["version-update:semver-major"]
+
+- package-ecosystem: npm
+  open-pull-requests-limit: 3
+  directory: /website
+  labels:
+    - dependencies
+    - javascript
+    - no-release
+  groups:
+    website:
+      patterns:
+        - "*"
+  schedule:
+    interval: weekly
+    day: sunday
+  ignore:
+    - dependency-name: "*"
+      update-types: ["version-update:semver-major"]

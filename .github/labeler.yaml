@@ -1,0 +1,16 @@
+docs:
+  - docs/**
+  - README.*
+
+automation:
+  - .gitattributes
+  - .github/**
+  - .gitignore
+  - .pre-commit-config.yaml
+  - .tflint.hcl
+  - Makefile
+  - _typos.toml
+
+configuration:
+  - src/**
+  - test/**
