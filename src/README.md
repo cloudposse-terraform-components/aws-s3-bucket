@@ -6,7 +6,7 @@ tags:
   - provider/aws
 ---
 
-# Component: `s3`
+# Component: `s3-bucket`
 
 This component is responsible for provisioning S3 buckets.
 
