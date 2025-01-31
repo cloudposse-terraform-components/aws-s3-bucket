@@ -95,7 +95,7 @@ func TestComponent(t *testing.T) {
 			assert.Equal(t, "DenyUnEncryptedObjectUploads", statement.Sid)
 			assert.Equal(t, "s3:PutObject", statement.Action)
 			assert.Equal(t, "Deny", statement.Effect)
-			assert.Equal(t, "arn:aws:s3:::eg-default-ue2-test-bd14af-998acf/*", statement.Resource)
+			assert.Equal(t, fmt.Sprintf("arn:aws:s3:::%s/*", bucketID), statement.Resource)
 			assert.Equal(t, "true", statement.Condition.Null["s3:x-amz-server-side-encryption"])
 
 			statement = policy.Statement[2] // Access the new statement
