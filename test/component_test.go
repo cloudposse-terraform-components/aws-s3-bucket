@@ -104,8 +104,8 @@ func TestComponent(t *testing.T) {
 			assert.Equal(t, "s3:*", statement.Action)
 			assert.Equal(t, "Deny", statement.Effect)
 			assert.ElementsMatch(t, []string{
-				"arn:aws:s3:::eg-default-ue2-test-bd14af-998acf/*",
-				"arn:aws:s3:::eg-default-ue2-test-bd14af-998acf",
+				fmt.Sprintf("arn:aws:s3:::%s/*", bucketID),
+				fmt.Sprintf("arn:aws:s3:::%s", bucketID),
 			}, statement.Resource) // Check for multiple resources
 			assert.Equal(t, false, statement.Condition.Bool["aws:SecureTransport"]) // Check the Bool condition
 		})
