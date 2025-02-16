@@ -1,10 +1,10 @@
 components:
   terraform:
-    s3-bucket/basic:
+    s3-bucket/disabled:
       metadata:
         component: target
       vars:
-        enabled: true
+        enabled: false
         account_map_tenant_name: core
         # Suggested configuration for all buckets
         user_enabled: false

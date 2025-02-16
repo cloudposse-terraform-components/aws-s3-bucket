@@ -16,14 +16,3 @@ spec:
         - "**/*.tftmpl"
         - "**/modules/**"
       excluded_paths: []
-
-    - component: "s3-bucket"
-      source: "../../src"
-      targets:
-        - "components/terraform/s3-bucket"
-      included_paths:
-        - "**/*.tf"
-        - "**/*.md"
-        - "**/*.tftmpl"
-        - "**/modules/**"
-      excluded_paths: []

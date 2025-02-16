@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/cloudposse/test-helpers/pkg/atmos"
-	helper "github.com/cloudposse/test-helpers/pkg/atmos/aws-component-helper"
+	helper "github.com/cloudposse/test-helpers/pkg/atmos/component-helper"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,96 +18,107 @@ type LifecyclePolicyRuleSelection struct {
 	CountType     string   `json:"countType"`
 	CountNumber   int      `json:"countNumber"`
 }
+
 type LifecyclePolicyRule struct {
 	RulePriority int                          `json:"rulePriority"`
 	Description  string                       `json:"description"`
 	Selection    LifecyclePolicyRuleSelection `json:"selection"`
 	Action       map[string]string            `json:"action"`
 }
+
 type LifecyclePolicy struct {
 	Rules []LifecyclePolicyRule `json:"rules"`
 }
 
-func TestComponent(t *testing.T) {
-	awsRegion := "us-east-2"
+type BucketPolicy struct {
+	Version   string `json:"Version"`
+	Statement []struct {
+		Sid       string      `json:"Sid,omitempty"`
+		Principal string      `json:"Principal"`
+		Effect    string      `json:"Effect"`
+		Action    string      `json:"Action"`
+		Resource  interface{} `json:"Resource"` // Changed to interface{} to accommodate array
+		Condition struct {
+			StringEquals    map[string]string `json:"StringEquals,omitempty"`
+			StringNotEquals map[string]string `json:"StringNotEquals,omitempty"`
+			Null            map[string]string `json:"Null,omitempty"`
+			Bool            map[string]bool   `json:"Bool,omitempty"` // Added Bool for new condition
+		} `json:"Condition"`
+	} `json:"Statement"`
+}
 
-	fixture := helper.NewFixture(t, "../", awsRegion, "test/fixtures")
+type ComponentSuite struct {
+	helper.TestSuite
+}
 
-	defer fixture.TearDown()
-	fixture.SetUp(&atmos.Options{})
+func (s *ComponentSuite) TestBasic() {
+	const component = "s3-bucket/basic"
+	const stack = "default-test"
+	const awsRegion = "us-east-2"
 
-	fixture.Suite("default", func(t *testing.T, suite *helper.Suite) {
-		suite.Test(t, "basic", func(t *testing.T, atm *helper.Atmos) {
-			defer atm.GetAndDestroy("s3-bucket/basic", "default-test", map[string]interface{}{})
-			component := atm.GetAndDeploy("s3-bucket/basic", "default-test", map[string]interface{}{})
-			assert.NotNil(t, component)
+	defer s.DestroyAtmosComponent(s.T(), component, stack, nil)
+	options, _ := s.DeployAtmosComponent(s.T(), component, stack, nil)
+	assert.NotNil(s.T(), options)
 
-			bucketID := atm.Output(component, "bucket_id")
-			assert.NotEmpty(t, bucketID)
+	bucketID := atmos.Output(s.T(), options, "bucket_id")
+	assert.NotEmpty(s.T(), bucketID)
 
-			bucketARN := atm.Output(component, "bucket_arn")
-			assert.True(t, strings.HasSuffix(bucketARN, bucketID))
+	bucketARN := atmos.Output(s.T(), options, "bucket_arn")
+	assert.True(s.T(), strings.HasSuffix(bucketARN, bucketID))
 
-			bucketRegion := atm.Output(component, "bucket_region")
-			assert.Equal(t, "us-east-2", bucketRegion)
+	bucketRegion := atmos.Output(s.T(), options, "bucket_region")
+	assert.Equal(s.T(), "us-east-2", bucketRegion)
 
-			bucketRegionalDomainName := atm.Output(component, "bucket_regional_domain_name")
-			assert.Equal(t, fmt.Sprintf("%s.s3.%s.amazonaws.com", bucketID, awsRegion), bucketRegionalDomainName)
+	bucketRegionalDomainName := atmos.Output(s.T(), options, "bucket_regional_domain_name")
+	assert.Equal(s.T(), fmt.Sprintf("%s.s3.%s.amazonaws.com", bucketID, awsRegion), bucketRegionalDomainName)
 
-			bucketDomainName := atm.Output(component, "bucket_domain_name")
-			assert.Equal(t, fmt.Sprintf("%s.s3.amazonaws.com", bucketID), bucketDomainName)
+	bucketDomainName := atmos.Output(s.T(), options, "bucket_domain_name")
+	assert.Equal(s.T(), fmt.Sprintf("%s.s3.amazonaws.com", bucketID), bucketDomainName)
 
-			versioning := aws.GetS3BucketVersioning(t, awsRegion, bucketID)
-			assert.Equal(t, "Enabled", versioning)
+	versioning := aws.GetS3BucketVersioning(s.T(), awsRegion, bucketID)
+	assert.Equal(s.T(), "Enabled", versioning)
 
-			policyString := aws.GetS3BucketPolicy(t, awsRegion, bucketID)
+	policyString := aws.GetS3BucketPolicy(s.T(), awsRegion, bucketID)
 
-			type BucketPolicy struct {
-				Version   string `json:"Version"`
-				Statement []struct {
-					Sid       string      `json:"Sid,omitempty"`
-					Principal string      `json:"Principal"`
-					Effect    string      `json:"Effect"`
-					Action    string      `json:"Action"`
-					Resource  interface{} `json:"Resource"` // Changed to interface{} to accommodate array
-					Condition struct {
-						StringEquals    map[string]string `json:"StringEquals,omitempty"`
-						StringNotEquals map[string]string `json:"StringNotEquals,omitempty"`
-						Null            map[string]string `json:"Null,omitempty"`
-						Bool            map[string]bool   `json:"Bool,omitempty"` // Added Bool for new condition
-					} `json:"Condition"`
-				} `json:"Statement"`
-			}
+	var policy BucketPolicy
+	json.Unmarshal([]byte(policyString), &policy)
 
-			var policy BucketPolicy
-			json.Unmarshal([]byte(policyString), &policy)
-
-			statement := policy.Statement[0]
-
-			assert.Equal(t, "DenyIncorrectEncryptionHeader", statement.Sid)
-			assert.Equal(t, "s3:PutObject", statement.Action)
-			assert.Equal(t, "Deny", statement.Effect)
-			assert.Equal(t, fmt.Sprintf("arn:aws:s3:::%s/*", bucketID), statement.Resource)
-			assert.Equal(t, "AES256", statement.Condition.StringNotEquals["s3:x-amz-server-side-encryption"])
-
-			statement = policy.Statement[1]
-
-			assert.Equal(t, "DenyUnEncryptedObjectUploads", statement.Sid)
-			assert.Equal(t, "s3:PutObject", statement.Action)
-			assert.Equal(t, "Deny", statement.Effect)
-			assert.Equal(t, fmt.Sprintf("arn:aws:s3:::%s/*", bucketID), statement.Resource)
-			assert.Equal(t, "true", statement.Condition.Null["s3:x-amz-server-side-encryption"])
-
-			statement = policy.Statement[2] // Access the new statement
-
-			assert.Equal(t, "ForceSSLOnlyAccess", statement.Sid)
-			assert.Equal(t, "s3:*", statement.Action)
-			assert.Equal(t, "Deny", statement.Effect)
-			assert.ElementsMatch(t, []string{
+	for _, statement := range policy.Statement {
+		switch statement.Sid {
+		case "DenyIncorrectEncryptionHeader":
+			assert.Equal(s.T(), "s3:PutObject", statement.Action)
+			assert.Equal(s.T(), "Deny", statement.Effect)
+			assert.Equal(s.T(), fmt.Sprintf("arn:aws:s3:::%s/*", bucketID), statement.Resource)
+			assert.Equal(s.T(), "AES256", statement.Condition.StringNotEquals["s3:x-amz-server-side-encryption"])
+		case "DenyUnEncryptedObjectUploads":
+			assert.Equal(s.T(), "s3:PutObject", statement.Action)
+			assert.Equal(s.T(), "Deny", statement.Effect)
+			assert.Equal(s.T(), fmt.Sprintf("arn:aws:s3:::%s/*", bucketID), statement.Resource)
+			assert.Equal(s.T(), "true", statement.Condition.Null["s3:x-amz-server-side-encryption"])
+		case "ForceSSLOnlyAccess":
+			assert.Equal(s.T(), "s3:*", statement.Action)
+			assert.Equal(s.T(), "Deny", statement.Effect)
+			assert.ElementsMatch(s.T(), []string{
 				fmt.Sprintf("arn:aws:s3:::%s/*", bucketID),
 				fmt.Sprintf("arn:aws:s3:::%s", bucketID),
-			}, statement.Resource) // Check for multiple resources
-			assert.Equal(t, false, statement.Condition.Bool["aws:SecureTransport"]) // Check the Bool condition
-		})
-	})
+			}, statement.Resource)
+			assert.Equal(s.T(), false, statement.Condition.Bool["aws:SecureTransport"])
+		}
+	}
+
+	s.DriftTest(component, stack, nil)
+}
+
+func (s *ComponentSuite) TestEnabledFlag() {
+	const component = "s3-bucket/disabled"
+	const stack = "default-test"
+	const awsRegion = "us-east-2"
+
+	s.VerifyEnabledFlag(component, stack, nil)
+}
+
+
+func TestRunSuite(t *testing.T) {
+	suite := new(ComponentSuite)
+	helper.Run(t, suite)
 }
