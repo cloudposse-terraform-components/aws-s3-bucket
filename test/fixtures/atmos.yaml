@@ -75,13 +75,3 @@ templates:
     # https://docs.gomplate.ca
     gomplate:
       enabled: true
-
-commands:
-  - name: "test-components"
-    description: "List the Atmos virtual components configured for testing"
-    steps:
-      - >
-        atmos describe stacks --format json --sections=component,metadata --components=component -s sandbox
-        | jq '.[] | .components.terraform | to_entries | 
-        map(select(.value.component == "component" and (.value.metadata.type != "abstract" or .value.metadata.type == null))) 
-        | .[].key' 
