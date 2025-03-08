@@ -1,0 +1,46 @@
+components:
+  terraform:
+    account-map:
+      metadata:
+        terraform_workspace: core-gbl-root
+      vars:
+        tenant: core
+        environment: gbl
+        stage: root
+
+#      This remote state is only for Cloud Posse internal use.
+#      It references the Cloud Posse test organizations actual infrastructure.
+#      remote_state_backend:
+#        s3:
+#          bucket: cptest-core-ue2-root-tfstate-core
+#          dynamodb_table: cptest-core-ue2-root-tfstate-core-lock
+#          role_arn: arn:aws:iam::822777368227:role/cptest-core-gbl-root-tfstate-core-ro
+#          encrypt: true
+#          key: terraform.tfstate
+#          acl: bucket-owner-full-control
+#          region: us-east-2
+
+      remote_state_backend_type: static
+      remote_state_backend:
+        # This static backend is used for tests that only need to use the account map iam-roles module
+        # to find the role to assume for Terraform operations. It is configured to use whatever
+        # the current user's role is, but the environment variable `TEST_ACCOUNT_ID` must be set to
+        # the account ID of the account that the user is currently assuming a role in.
+        #
+        # For some components, this backend is missing important data, and those components
+        # will need that data added to the backend configuration in order to work properly.
+        static:
+          account_info_map: {}
+          all_accounts: []
+          aws_partition: aws
+          full_account_map: {}
+          iam_role_arn_templates: {}
+          non_eks_accounts: []
+          profiles_enabled: false
+          root_account_aws_name: root
+          terraform_access_map: {}
+          terraform_dynamic_role_enabled: false
+          terraform_role_name_map:
+            apply: terraform
+            plan: planner
+          terraform_roles: {}

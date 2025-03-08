@@ -1,0 +1,66 @@
+import:
+  - catalog/account-map
+
+terraform:
+  backend_type: local
+  backend:
+    local:
+      path: '{{ getenv "COMPONENT_HELPER_STATE_DIR" | default "../../../state" }}/{{ .component }}/terraform.tfstate'
+      workspace_dir: '{{ getenv "COMPONENT_HELPER_STATE_DIR" | default "../../../state" }}/{{ .component }}/'
+  vars:
+    namespace: eg
+    tenant: default
+    environment: ue2
+    region: us-east-2
+    stage: test
+    label_order:
+      - namespace
+      - tenant
+      - environment
+      - stage
+      - name
+      - attributes
+    descriptor_formats:
+      account_name:
+        format: "%v-%v"
+        labels:
+          - tenant
+          - stage
+      stack:
+        format: "%v-%v-%v"
+        labels:
+          - tenant
+          - environment
+          - stage
+
+components:
+  terraform:
+    account-map:
+      remote_state_backend:
+        static:
+          account_info_map:
+            default-test:
+              account_email_format: aws+cptest-%s@example.com
+              eks: true
+              id: '{{ getenv "TEST_ACCOUNT_ID" | default "<TEST_ACCOUNT_ID>" }}'
+              ou: default
+              parent_ou: none
+              stage: test
+              tags:
+                eks: false
+              tenant: default
+          all_accounts:
+            - default-test
+          artifacts_account_account_name: default-test
+          audit_account_account_name: default-test
+          dns_account_account_name: default-test
+          eks_accounts:
+            - default-test
+          full_account_map:
+            default-test: '{{ getenv "TEST_ACCOUNT_ID" | default "<TEST_ACCOUNT_ID>" }}'
+          iam_role_arn_templates:
+            default-test: 'arn:aws:iam::{{ getenv "TEST_ACCOUNT_ID" | default "<TEST_ACCOUNT_ID>" }}:role/tester-%s'
+          identity_account_account_name: default-test
+          root_account_account_name: default-test
+          terraform_roles:
+            default-test: ''
