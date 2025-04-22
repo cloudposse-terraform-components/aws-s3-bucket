@@ -37,7 +37,7 @@ module "bucket_policy" {
 
 module "s3_bucket" {
   source  = "cloudposse/s3-bucket/aws"
-  version = "3.1.1"
+  version = "4.10.0"
 
   bucket_name = var.bucket_name
 
