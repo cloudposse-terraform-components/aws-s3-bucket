@@ -5,3 +5,24 @@ repository:
   description: This component is responsible for provisioning S3 buckets
   homepage: https://cloudposse.com/accelerate
   topics: terraform, terraform-component
+
+rulesets:
+  - name: prevent destruction of the default branch
+    target: branch
+    enforcement: active
+    conditions:
+      ref_name:
+        include:
+          - "~DEFAULT_BRANCH"
+        exclude: []
+    rules:
+      - type: merge_queue
+        parameters:
+          check_response_timeout_minutes: 240
+          grouping_strategy: HEADGREEN
+          max_entries_to_build: 5
+          max_entries_to_merge: 5
+          merge_method: SQUASH
+          min_entries_to_merge: 1
+          min_entries_to_merge_wait_minutes: 10
+                    
