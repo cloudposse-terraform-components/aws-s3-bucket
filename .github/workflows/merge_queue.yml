@@ -15,11 +15,6 @@ jobs:
     name: Context
     runs-on: ["ubuntu-latest"]
     steps:
-      - uses: cloudposse-github-actions/get-pr@v2
-        id: pr
-        with:
-          id: ${{ github.event.issue.number }}
-
       - uses: actions/github-script@v7
         id: properties
         with:
@@ -41,62 +36,31 @@ jobs:
       go_sum_path: 'test/go.sum'
       terraform_state_path: 'state'
       terraform_state_retention_days: 10
-      base: ${{ fromJSON(steps.pr.outputs.json).base.sha }}
-      base_repo_owner: ${{ fromJSON(steps.pr.outputs.json).base.repo.owner.login }}
-      base_repo_name: ${{ fromJSON(steps.pr.outputs.json).base.repo.name }}
-      head_sha: ${{ fromJSON(steps.pr.outputs.json).head.sha }}
-      head_repo_owner: ${{ fromJSON(steps.pr.outputs.json).head.repo.owner.login }}
-      head_repo_name: ${{ fromJSON(steps.pr.outputs.json).head.repo.name }}
-      found: ${{ steps.pr.outputs.found }}
-      json: ${{ steps.pr.outputs.json }}
-      number: ${{ steps.pr.outputs.number }}
-      title: ${{ steps.pr.outputs.title }}
-      body: ${{ steps.pr.outputs.body }}
-      url: ${{ steps.pr.outputs.url }}
-      created_at: ${{ steps.pr.outputs.created_at }}
-      merged_at: ${{ steps.pr.outputs.merged_at }}
-      closed_at: ${{ steps.pr.outputs.closed_at }}
-      labels: ${{ steps.pr.outputs.labels }}
+      base: ${{ github.event.merge_group.base_sha }}
+      base_repo_owner: ${{ github.repo.owner }}
+      base_repo_name: ${{ github.repo.repo }}
+      head_sha: ${{ github.event.merge_group.head_sha }}
+      head_repo_owner: ${{ github.repo.owner }}
+      head_repo_name: ${{ github.repo.repo }}
       test_aws_role: ${{ steps.properties.outputs.test-aws-role || 'arn:aws:iam::799847381734:role/cptest-test-gbl-sandbox-gha-iam-terratest' }}
       test_skip_concurrency: ${{ steps.properties.outputs.test-skip-concurrency }}
       test_needs_aws: ${{ steps.properties.outputs.test-needs-aws }}
       test_needs_fixtures: ${{ steps.properties.outputs.test-needs-fixtures }}
       atmos_version: 1.129.0
-      uses_github: ${{ contains(fromJSON(steps.pr.outputs.json).base.repo.name, '-github-') ||
-        contains(steps.pr.outputs.labels, 'terraform-github-provider') ||
+      uses_github: ${{ contains(github.repo.repo, '-github-') ||
         contains(steps.properties.outputs.providers, 'github') }}
-      uses_opsgenie: ${{ contains(fromJSON(steps.pr.outputs.json).base.repo.name, '-opsgenie-') ||
-        contains(steps.pr.outputs.labels, 'terraform-opsgenie-provider') ||
+      uses_opsgenie: ${{ contains(github.repo.repoe, '-opsgenie-') ||
         contains(steps.properties.outputs.providers, 'opsgenie') }}
-      uses_aws: ${{ contains(fromJSON(steps.pr.outputs.json).base.repo.name, '-aws-') ||
-        contains(steps.pr.outputs.labels, 'terraform-aws-provider') ||
+      uses_aws: ${{ contains(github.repo.repo, '-aws-') ||
         contains(steps.properties.outputs.providers, 'aws') }}
-      uses_spotinst: ${{ contains(fromJSON(steps.pr.outputs.json).base.repo.name, '-spotinst-') ||
-        contains(steps.pr.outputs.labels, 'terraform-spotinst-provider') ||
+      uses_spotinst: ${{ contains(github.repo.repo, '-spotinst-') ||
         contains(steps.properties.outputs.providers, 'spotinst') }}
-      uses_datadog: ${{ contains(fromJSON(steps.pr.outputs.json).base.repo.name, '-datadog-') ||
-        contains(steps.pr.outputs.labels, 'terraform-datadog-provider') ||
+      uses_datadog: ${{ contains(github.repo.repo, '-datadog-') ||
         contains(steps.properties.outputs.providers, 'datadog') }}
-      uses_tfe: ${{ contains(fromJSON(steps.pr.outputs.json).base.repo.name, '-tfe-') ||
-        contains(steps.pr.outputs.labels, 'terraform-tfe-provider') ||
+      uses_tfe: ${{ contains(github.repo.repo, '-tfe-') ||
         contains(steps.properties.outputs.providers, 'tfe') }}
-      uses_cloudflare: ${{ contains(fromJSON(steps.pr.outputs.json).base.repo.name, '-cloudflare-') ||
-        contains(steps.pr.outputs.labels, 'terraform-cloudflare-provider') ||
+      uses_cloudflare: ${{ contains(github.repo.repo, '-cloudflare-') ||
         contains(steps.properties.outputs.providers, 'cloudflare') }}
-
-
-  ack:
-    if: github.event.comment.id != ''
-    needs: [context]
-    runs-on: ["ubuntu-latest"]
-    steps:
-      - name: "Add reaction"
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          repository: ${{ needs.context.outputs.base_repo_owner }}/${{ needs.context.outputs.base_repo_name }}
-          comment-id: ${{ github.event.comment.id }}
-          token: ${{ github.token }}
-          reactions: '+1'
 
   pending:
     needs: [context]
@@ -648,30 +612,6 @@ jobs:
             echo "result=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: "Comment on PR if tests skipped"
-        if: ${{ steps.skip-tests.outputs.result == 'true' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const issueNumber = ${{ needs.context.outputs.number }};
-            const comments = await github.rest.issues.listComments({
-              owner: "${{ needs.context.outputs.base_repo_owner }}",
-              repo: "${{ needs.context.outputs.base_repo_name }}",
-              issue_number: issueNumber,
-            });
-
-            const commentBody = "There are no real tests for this component. So we set terratest statuses to successful execution without running any tests";
-            const commentExists = comments.data.some(comment => comment.body === commentBody);
-
-            if (!commentExists) {
-              await github.rest.issues.createComment({
-                owner: "${{ needs.context.outputs.base_repo_owner }}",
-                repo: "${{ needs.context.outputs.base_repo_name }}",
-                issue_number: issueNumber,
-                body: commentBody,
-              });
-            }
-
       - name: "Install Go"
         uses: actions/setup-go@v5
         if: ${{ steps.skip-tests.outputs.result == 'false' }}
@@ -760,29 +700,6 @@ jobs:
           # go test -v -timeout 1h -skip-setup -skip-tests
           # go test -v -timeout 1h --only-deploy-dependencies --state-dir=${{ needs.context.outputs.terraform_state_path }}
           cd -
-
-      # We need repo write permissions to delete artifacts, which we don't have and don't want to have.
-      #  - name: Delete Artifact
-      #    uses: actions/github-script@v7
-      #    if: needs.fixture_id.outputs.terraform_state_artifact_id != ''
-      #    with:
-      #      script: |
-      #        const owner = context.repo.owner;
-      #        const repo = context.repo.repo;
-      #        const artifact_id = "${{ needs.fixture_id.outputs.terraform_state_artifact_id }}";
-      #        const response = await github.rest.actions.deleteArtifact({
-      #          owner,
-      #          repo,
-      #          artifact_id
-      #        });
-      #
-      #        if (response.status !== 204) {
-      #          console.log('Deletion failed or encountered an issue, status:', response.status);
-      #          // Check if there is an error message in the response body and log it
-      #          if (response.data && response.data.message) {
-      #            console.log('Error message:', response.data.message);
-      #          }
-      #        }
 
       - name: "Update GitHub Status for failure"
         if: ${{ failure() }}
