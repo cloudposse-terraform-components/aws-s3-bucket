@@ -13,8 +13,7 @@ permissions:
 jobs:
   context:
     name: Context
-    if: ${{ needs.access.outputs.granted == 'true' }}
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ["ubuntu-latest"]
     steps:
       - uses: cloudposse-github-actions/get-pr@v2
         id: pr
@@ -89,7 +88,7 @@ jobs:
   ack:
     if: github.event.comment.id != ''
     needs: [context]
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ["ubuntu-latest"]
     steps:
       - name: "Add reaction"
         uses: peter-evans/create-or-update-comment@v4
@@ -101,7 +100,7 @@ jobs:
 
   pending:
     needs: [context]
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ["ubuntu-latest"]
     steps:
       - name: "Update GitHub Status: fixtures"
         if: ${{ needs.context.outputs.test_needs_fixtures == 'true' }}
@@ -179,7 +178,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
   fixtures:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ["ubuntu-latest"]
     environment: terratest
     needs: [context, pending]
     env:
@@ -390,7 +389,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
   terratest:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ["ubuntu-latest"]
     environment: terratest
     needs: [context, fixtures]
     env:
@@ -595,7 +594,7 @@ jobs:
 
   cleanup:
     if: ${{ always() }}
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ["ubuntu-latest"]
     environment: terratest
     needs: [context, terratest]
     env:
