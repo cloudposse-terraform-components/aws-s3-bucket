@@ -37,29 +37,29 @@ jobs:
       terraform_state_path: 'state'
       terraform_state_retention_days: 10
       base: ${{ github.event.merge_group.base_sha }}
-      base_repo_owner: ${{ github.event.organization }}
-      base_repo_name: ${{ github.event.repository }}
+      base_repo_owner: ${{ github.event.organization.name }}
+      base_repo_name: ${{ github.event.repository.name }}
       head_sha: ${{ github.event.merge_group.head_sha }}
-      head_repo_owner: ${{ github.event.organization }}
-      head_repo_name: ${{ github.event.repository }}
+      head_repo_owner: ${{ github.event.organization.name }}
+      head_repo_name: ${{ github.event.repository.name }}
       test_aws_role: ${{ steps.properties.outputs.test-aws-role || 'arn:aws:iam::799847381734:role/cptest-test-gbl-sandbox-gha-iam-terratest' }}
       test_skip_concurrency: ${{ steps.properties.outputs.test-skip-concurrency }}
       test_needs_aws: ${{ steps.properties.outputs.test-needs-aws }}
       test_needs_fixtures: ${{ steps.properties.outputs.test-needs-fixtures }}
       atmos_version: 1.129.0
-      uses_github: ${{ contains(github.repo.repo, '-github-') ||
+      uses_github: ${{ contains(github.event.repository.name, '-github-') ||
         contains(steps.properties.outputs.providers, 'github') }}
-      uses_opsgenie: ${{ contains(github.repo.repoe, '-opsgenie-') ||
+      uses_opsgenie: ${{ contains(github.event.repository.name, '-opsgenie-') ||
         contains(steps.properties.outputs.providers, 'opsgenie') }}
-      uses_aws: ${{ contains(github.repo.repo, '-aws-') ||
+      uses_aws: ${{ contains(github.event.repository.name, '-aws-') ||
         contains(steps.properties.outputs.providers, 'aws') }}
-      uses_spotinst: ${{ contains(github.repo.repo, '-spotinst-') ||
+      uses_spotinst: ${{ contains(github.event.repository.name, '-spotinst-') ||
         contains(steps.properties.outputs.providers, 'spotinst') }}
-      uses_datadog: ${{ contains(github.repo.repo, '-datadog-') ||
+      uses_datadog: ${{ contains(github.event.repository.name, '-datadog-') ||
         contains(steps.properties.outputs.providers, 'datadog') }}
-      uses_tfe: ${{ contains(github.repo.repo, '-tfe-') ||
+      uses_tfe: ${{ contains(github.event.repository.name, '-tfe-') ||
         contains(steps.properties.outputs.providers, 'tfe') }}
-      uses_cloudflare: ${{ contains(github.repo.repo, '-cloudflare-') ||
+      uses_cloudflare: ${{ contains(github.event.repository.name, '-cloudflare-') ||
         contains(steps.properties.outputs.providers, 'cloudflare') }}
 
   pending:
