@@ -37,10 +37,10 @@ jobs:
       terraform_state_path: 'state'
       terraform_state_retention_days: 10
       base: ${{ github.event.merge_group.base_sha }}
-      base_repo_owner: ${{ github.event.organization.name }}
+      base_repo_owner: ${{ github.event.repository.owner.login }}
       base_repo_name: ${{ github.event.repository.name }}
       head_sha: ${{ github.event.merge_group.head_sha }}
-      head_repo_owner: ${{ github.event.organization.name }}
+      head_repo_owner: ${{ github.event.repository.owner.login }}
       head_repo_name: ${{ github.event.repository.name }}
       test_aws_role: ${{ steps.properties.outputs.test-aws-role || 'arn:aws:iam::799847381734:role/cptest-test-gbl-sandbox-gha-iam-terratest' }}
       test_skip_concurrency: ${{ steps.properties.outputs.test-skip-concurrency }}
