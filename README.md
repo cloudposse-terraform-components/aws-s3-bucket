@@ -25,16 +25,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
 -->
 
 This component is responsible for provisioning S3 buckets.
