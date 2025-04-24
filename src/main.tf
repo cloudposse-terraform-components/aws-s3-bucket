@@ -10,10 +10,10 @@ locals {
 
   bucket_policy = var.custom_policy_enabled ? one(data.aws_iam_policy_document.custom_policy[*].json) : data.template_file.bucket_policy.rendered
 
-  logging = var.logging != null ? {
+  logging = var.logging != null ? [{
     bucket_name = var.logging_bucket_name_rendering_enabled ? format(var.logging_bucket_name_rendering_template, var.namespace, var.tenant, var.environment, var.stage, var.logging.bucket_name) : var.logging.bucket_name
     prefix      = var.logging_bucket_name_rendering_enabled ? format(var.logging_bucket_prefix_rendering_template, var.logging.prefix, var.name) : var.logging.prefix
-  } : null
+  }] : []
 }
 
 data "aws_partition" "current" {}
@@ -50,7 +50,7 @@ module "s3_bucket" {
   block_public_policy          = var.block_public_policy
   ignore_public_acls           = var.ignore_public_acls
   restrict_public_buckets      = var.restrict_public_buckets
-  logging                      = [local.logging]
+  logging                      = local.logging
   source_policy_documents      = [local.bucket_policy]
   privileged_principal_actions = var.privileged_principal_actions
   privileged_principal_arns    = var.privileged_principal_arns
