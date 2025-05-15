@@ -28,7 +28,7 @@ data "template_file" "bucket_policy" {
 
 module "bucket_policy" {
   source  = "cloudposse/iam-policy/aws"
-  version = "2.0.1"
+  version = "2.0.2"
 
   iam_policy_statements = var.iam_policy_statements
 
