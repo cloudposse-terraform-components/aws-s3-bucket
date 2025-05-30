@@ -5,3 +5,4 @@ repository:
   description: This component is responsible for provisioning S3 buckets
   homepage: https://cloudposse.com/accelerate
   topics: terraform, terraform-component
+

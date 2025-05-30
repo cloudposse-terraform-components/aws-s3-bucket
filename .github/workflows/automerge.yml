@@ -1,0 +1,20 @@
+name: auto merge
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number'
+        required: true
+        type: string
+
+permissions:
+  pull-requests: write
+  id-token: write
+  contents: write
+
+jobs:
+  automerge:
+    uses: cloudposse-terraform-components/.github/.github/workflows/shared-auto-merge.yml@main
+    with:
+      pr_number: ${{ inputs.pr_number }}
+    secrets: inherit
