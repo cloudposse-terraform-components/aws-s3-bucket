@@ -7,6 +7,9 @@
 **/Makefile   @cloudposse-terraform-components/engineering
 **/Makefile.* @cloudposse-terraform-components/engineering
 
+# Cloud Posse must review any changes to tflint configuration and pre-commit config
+.tflint.hcl             @cloudposse-terraform-components/engineering
+.pre-commit-config.yaml @cloudposse-terraform-components/engineering
 
 # Cloud Posse Admins must review all changes to CODEOWNERS, github configuration or the mergify configuration
 .github/*           @cloudposse-terraform-components/admins
