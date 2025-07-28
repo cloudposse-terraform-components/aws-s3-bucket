@@ -389,3 +389,9 @@ variable "iam_policy_statements" {
   description = "Map of IAM policy statements to use in the bucket policy."
   default     = {}
 }
+
+variable "account_map_component_name" {
+  type        = string
+  description = "The name of the account-map component"
+  default     = "account-map"
+}
