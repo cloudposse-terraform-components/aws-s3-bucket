@@ -1,7 +1,7 @@
 # Required `tflint --init`
 plugin "aws" {
     enabled    = true
-    version    = "0.43.0"
+    version    = "0.44.0"
     source     = "github.com/terraform-linters/tflint-ruleset-aws"
     # Used only in Spacelift: .spacelift/config.yml
     deep_check = false
