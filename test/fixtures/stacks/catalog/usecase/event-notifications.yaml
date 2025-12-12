@@ -18,10 +18,10 @@ components:
         ignore_public_acls: true
         restrict_public_buckets: true
         allow_ssl_requests_only: true
-        # Event notification configuration - SNS topic is dynamically added in test
+        # Event notification configuration
         event_notification_details:
           enabled: true
-          eventbridge: false
+          eventbridge: true
           lambda_list: []
           queue_list: []
           topic_list: []

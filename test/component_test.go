@@ -187,7 +187,7 @@ func (s *ComponentSuite) TestEventNotifications() {
 
 	eventNotification := getS3BucketEventNotification(s.T(), awsRegion, bucketID)
 	assert.NotNil(s.T(), eventNotification)
-	assert.Equal(s.T(), false, eventNotification.EventBridgeConfiguration)
+	assert.True(s.T(), eventNotification.EventBridgeConfiguration, "EventBridge should be enabled")
 	assert.Equal(s.T(), []string{}, eventNotification.LambdaFunctionConfigurations)
 	assert.Equal(s.T(), []string{}, eventNotification.QueueConfigurations)
 	assert.Equal(s.T(), []string{}, eventNotification.TopicConfigurations)
