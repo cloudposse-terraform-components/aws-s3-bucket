@@ -119,6 +119,7 @@ func (s *ComponentSuite) TestEnabledFlag() {
 func (s *ComponentSuite) TestEventNotifications() {
 	const component = "s3-bucket/event-notifications"
 	const stack = "default-test"
+	const awsRegion = "us-east-2"
 
 	defer s.DestroyAtmosComponent(s.T(), component, stack, nil)
 	options, _ := s.DeployAtmosComponent(s.T(), component, stack, nil)
