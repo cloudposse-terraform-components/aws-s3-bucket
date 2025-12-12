@@ -88,6 +88,9 @@ module "s3_bucket" {
   user_enabled           = var.user_enabled
   allowed_bucket_actions = var.allowed_bucket_actions
 
+  # S3 event notifications
+  event_notification_details = var.event_notification_details
+
   context = module.this.context
 }
 
