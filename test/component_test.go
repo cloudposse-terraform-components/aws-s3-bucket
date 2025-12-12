@@ -12,6 +12,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type LifecyclePolicyRuleSelection struct {
+	TagStatus     string   `json:"tagStatus"`
+	TagPrefixList []string `json:"tagPrefixList"`
+	CountType     string   `json:"countType"`
+	CountNumber   int      `json:"countNumber"`
+}
+
+type LifecyclePolicyRule struct {
+	RulePriority int                          `json:"rulePriority"`
+	Description  string                       `json:"description"`
+	Selection    LifecyclePolicyRuleSelection `json:"selection"`
+	Action       map[string]string            `json:"action"`
+}
+
+type LifecyclePolicy struct {
+	Rules []LifecyclePolicyRule `json:"rules"`
+}
+
 type BucketPolicy struct {
 	Version   string `json:"Version"`
 	Statement []struct {
