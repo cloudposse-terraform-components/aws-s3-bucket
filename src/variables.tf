@@ -395,3 +395,34 @@ variable "account_map_component_name" {
   description = "The name of the account-map component"
   default     = "account-map"
 }
+
+variable "event_notification_details" {
+  type = object({
+    enabled     = bool
+    eventbridge = optional(bool, false)
+    lambda_list = optional(list(object({
+      lambda_function_arn = string
+      events              = optional(list(string), ["s3:ObjectCreated:*"])
+      filter_prefix       = optional(string)
+      filter_suffix       = optional(string)
+    })), [])
+
+    queue_list = optional(list(object({
+      queue_arn     = string
+      events        = optional(list(string), ["s3:ObjectCreated:*"])
+      filter_prefix = optional(string)
+      filter_suffix = optional(string)
+    })), [])
+
+    topic_list = optional(list(object({
+      topic_arn     = string
+      events        = optional(list(string), ["s3:ObjectCreated:*"])
+      filter_prefix = optional(string)
+      filter_suffix = optional(string)
+    })), [])
+  })
+  description = "S3 event notification details"
+  default = {
+    enabled = false
+  }
+}

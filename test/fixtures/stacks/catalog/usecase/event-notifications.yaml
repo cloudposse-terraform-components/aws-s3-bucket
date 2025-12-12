@@ -1,0 +1,28 @@
+components:
+  terraform:
+    s3-bucket/event-notifications:
+      metadata:
+        component: target
+      vars:
+        enabled: true
+        account_map_tenant_name: core
+        # Suggested configuration for all buckets
+        user_enabled: false
+        acl: "private"
+        grants: null
+        force_destroy: false
+        versioning_enabled: true
+        allow_encrypted_uploads_only: true
+        block_public_acls: true
+        block_public_policy: true
+        ignore_public_acls: true
+        restrict_public_buckets: true
+        allow_ssl_requests_only: true
+        # Event notification configuration
+        event_notification_details:
+          enabled: true
+          eventbridge: true
+          lambda_list: []
+          queue_list: []
+          topic_list: []
+

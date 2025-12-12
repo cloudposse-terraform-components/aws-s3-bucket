@@ -1,15 +1,19 @@
 package test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/cloudposse/test-helpers/pkg/atmos"
 	helper "github.com/cloudposse/test-helpers/pkg/atmos/component-helper"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type LifecyclePolicyRuleSelection struct {
@@ -45,6 +49,13 @@ type BucketPolicy struct {
 			Bool            map[string]bool   `json:"Bool,omitempty"` // Added Bool for new condition
 		} `json:"Condition"`
 	} `json:"Statement"`
+}
+
+type EventNotificationConfig struct {
+	EventBridgeConfiguration     bool
+	LambdaFunctionConfigurations []string
+	QueueConfigurations          []string
+	TopicConfigurations          []string
 }
 
 type ComponentSuite struct {
@@ -117,6 +128,72 @@ func (s *ComponentSuite) TestEnabledFlag() {
 	s.VerifyEnabledFlag(component, stack, nil)
 }
 
+func getS3BucketEventNotification(t *testing.T, region string, bucketName string) *EventNotificationConfig {
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	require.NoError(t, err)
+
+	client := s3.NewFromConfig(cfg)
+	result, err := client.GetBucketNotificationConfiguration(ctx, &s3.GetBucketNotificationConfigurationInput{
+		Bucket: &bucketName,
+	})
+	require.NoError(t, err)
+
+	config := &EventNotificationConfig{
+		EventBridgeConfiguration:     result.EventBridgeConfiguration != nil,
+		LambdaFunctionConfigurations: []string{},
+		QueueConfigurations:          []string{},
+		TopicConfigurations:          []string{},
+	}
+
+	if result.LambdaFunctionConfigurations != nil {
+		for _, lambdaConfig := range result.LambdaFunctionConfigurations {
+			if lambdaConfig.LambdaFunctionArn != nil {
+				config.LambdaFunctionConfigurations = append(config.LambdaFunctionConfigurations, *lambdaConfig.LambdaFunctionArn)
+			}
+		}
+	}
+
+	if result.QueueConfigurations != nil {
+		for _, queueConfig := range result.QueueConfigurations {
+			if queueConfig.QueueArn != nil {
+				config.QueueConfigurations = append(config.QueueConfigurations, *queueConfig.QueueArn)
+			}
+		}
+	}
+
+	if result.TopicConfigurations != nil {
+		for _, topicConfig := range result.TopicConfigurations {
+			if topicConfig.TopicArn != nil {
+				config.TopicConfigurations = append(config.TopicConfigurations, *topicConfig.TopicArn)
+			}
+		}
+	}
+
+	return config
+}
+
+func (s *ComponentSuite) TestEventNotifications() {
+	const component = "s3-bucket/event-notifications"
+	const stack = "default-test"
+	const awsRegion = "us-east-2"
+
+	defer s.DestroyAtmosComponent(s.T(), component, stack, nil)
+	options, _ := s.DeployAtmosComponent(s.T(), component, stack, nil)
+	assert.NotNil(s.T(), options)
+
+	bucketID := atmos.Output(s.T(), options, "bucket_id")
+	assert.NotEmpty(s.T(), bucketID)
+
+	eventNotification := getS3BucketEventNotification(s.T(), awsRegion, bucketID)
+	assert.NotNil(s.T(), eventNotification)
+	assert.True(s.T(), eventNotification.EventBridgeConfiguration, "EventBridge should be enabled")
+	assert.Equal(s.T(), []string{}, eventNotification.LambdaFunctionConfigurations)
+	assert.Equal(s.T(), []string{}, eventNotification.QueueConfigurations)
+	assert.Equal(s.T(), []string{}, eventNotification.TopicConfigurations)
+
+	s.DriftTest(component, stack, nil)
+}
 
 func TestRunSuite(t *testing.T) {
 	suite := new(ComponentSuite)
