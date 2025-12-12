@@ -1,11 +1,14 @@
 package test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/cloudposse/test-helpers/pkg/atmos"
 	helper "github.com/cloudposse/test-helpers/pkg/atmos/component-helper"
 	"github.com/gruntwork-io/terratest/modules/aws"
@@ -117,6 +120,43 @@ func (s *ComponentSuite) TestEnabledFlag() {
 	s.VerifyEnabledFlag(component, stack, nil)
 }
 
+func (s *ComponentSuite) TestEventNotifications() {
+	const component = "s3-bucket/event-notifications"
+	const stack = "default-test"
+	const awsRegion = "us-east-2"
+
+	defer s.DestroyAtmosComponent(s.T(), component, stack, nil)
+	options, _ := s.DeployAtmosComponent(s.T(), component, stack, nil)
+	assert.NotNil(s.T(), options)
+
+	bucketID := atmos.Output(s.T(), options, "bucket_id")
+	assert.NotEmpty(s.T(), bucketID)
+
+	// Get AWS config for SDK v2
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(awsRegion))
+	assert.NoError(s.T(), err)
+
+	// Create S3 client
+	s3Client := s3.NewFromConfig(cfg)
+
+	// Get bucket notification configuration
+	notificationOutput, err := s3Client.GetBucketNotificationConfiguration(ctx, &s3.GetBucketNotificationConfigurationInput{
+		Bucket: &bucketID,
+	})
+	assert.NoError(s.T(), err)
+
+	// Verify EventBridge is enabled
+	// In AWS SDK v2, the presence of EventBridgeConfiguration (not nil) indicates EventBridge is enabled
+	assert.NotNil(s.T(), notificationOutput.EventBridgeConfiguration, "EventBridgeConfiguration should not be nil when event_notification_details.eventbridge is true")
+
+	// Verify no Lambda, Queue, or Topic configurations (as per our test fixture)
+	assert.Empty(s.T(), notificationOutput.LambdaFunctionConfigurations, "LambdaFunctionConfigurations should be empty")
+	assert.Empty(s.T(), notificationOutput.QueueConfigurations, "QueueConfigurations should be empty")
+	assert.Empty(s.T(), notificationOutput.TopicConfigurations, "TopicConfigurations should be empty")
+
+	s.DriftTest(component, stack, nil)
+}
 
 func TestRunSuite(t *testing.T) {
 	suite := new(ComponentSuite)
