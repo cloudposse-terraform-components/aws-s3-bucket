@@ -396,37 +396,6 @@ variable "account_map_component_name" {
   default     = "account-map"
 }
 
-variable "account_map_enabled" {
-  type        = bool
-  description = <<-EOT
-    Enable the account map component lookup. When disabled, use the `account_map` variable to provide static account mapping.
-    EOT
-  default     = true
-}
-
-variable "account_map" {
-  type = object({
-    full_account_map              = map(string)
-    audit_account_account_name    = optional(string, "")
-    root_account_account_name     = optional(string, "")
-    identity_account_account_name = optional(string, "")
-    aws_partition                 = optional(string, "aws")
-    iam_role_arn_templates        = optional(map(string), {})
-  })
-  description = <<-EOT
-    Static account map to use when `account_map_enabled` is `false`. Map of account names (tenant-stage format) to account IDs.
-    Optional attributes support component-specific functionality (e.g., audit_account_account_name for cloudtrail).
-    EOT
-  default = {
-    full_account_map              = {}
-    audit_account_account_name    = ""
-    root_account_account_name     = ""
-    identity_account_account_name = ""
-    aws_partition                 = "aws"
-    iam_role_arn_templates        = {}
-  }
-}
-
 variable "event_notification_details" {
   type = object({
     enabled     = bool
