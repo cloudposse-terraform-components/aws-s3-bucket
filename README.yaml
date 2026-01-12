@@ -47,9 +47,9 @@ usage: |-
                   days: 60
               noncurrent_version_transition:
                 - storage_class: GLACIER
-                  days: 60
+                  noncurrent_days: 60
               noncurrent_version_expiration:
-                days: 90
+                noncurrent_days: 90
               expiration:
                 days: 120
   ```
