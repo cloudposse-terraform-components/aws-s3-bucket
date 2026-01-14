@@ -185,12 +185,12 @@ variable "lifecycle_configuration_rules" {
 
     # `filter_and` is the `and` configuration block inside the `filter` configuration.
     # This is the only place you should specify a prefix.
-    filter_and = any
-    expiration = any
-    transition = list(any)
+    filter_and = optional(any)
+    expiration = optional(any)
+    transition = optional(list(any))
 
-    noncurrent_version_expiration = any
-    noncurrent_version_transition = list(any)
+    noncurrent_version_expiration = optional(any)
+    noncurrent_version_transition = optional(list(any))
   }))
   default     = []
   description = "A list of lifecycle V2 rules"
