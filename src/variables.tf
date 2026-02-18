@@ -366,6 +366,17 @@ variable "bucket_key_enabled" {
   EOT
 }
 
+variable "source_policy_enabled" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+    Whether to pass source policy documents to the S3 module.
+    Set to `false` to prevent the module from creating an `aws_s3_bucket_policy` resource
+    based on `iam_policy_statements`. This is useful when importing existing buckets that have
+    their own policies which should not be managed by Terraform.
+    EOT
+}
+
 variable "custom_policy_actions" {
   description = "List of S3 Actions for the custom policy"
   type        = list(string)
