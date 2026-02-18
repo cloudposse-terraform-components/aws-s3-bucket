@@ -51,7 +51,7 @@ module "s3_bucket" {
   ignore_public_acls           = var.ignore_public_acls
   restrict_public_buckets      = var.restrict_public_buckets
   logging                      = local.logging
-  source_policy_documents      = [local.bucket_policy]
+  source_policy_documents      = var.source_policy_enabled ? [local.bucket_policy] : []
   privileged_principal_actions = var.privileged_principal_actions
   privileged_principal_arns    = var.privileged_principal_arns
   s3_object_ownership          = var.s3_object_ownership
