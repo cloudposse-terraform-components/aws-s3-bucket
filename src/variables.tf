@@ -141,59 +141,47 @@ variable "allow_ssl_requests_only" {
   description = "Set to `true` to require requests to use Secure Socket Layer (HTTPS/SSL). This will explicitly deny access to HTTP requests"
 }
 
-/*
-Schema for lifecycle_configuration_rules
-{
-  enabled = true # bool
-  id      = string
-  abort_incomplete_multipart_upload_days = null # number
-  filter_and = {
-    object_size_greater_than = null # integer >= 0
-    object_size_less_than    = null # integer >= 1
-    prefix                   = null # string
-    tags                     = {}   # map(string)
-  }
-  expiration = {
-    date                         = null # string, RFC3339 time format, GMT
-    days                         = null # integer > 0
-    expired_object_delete_marker = null # bool
-  }
-  noncurrent_version_expiration = {
-    newer_noncurrent_versions = null # integer > 0
-    noncurrent_days           = null # integer >= 0
-  }
-  transition = [{
-    date          = null # string, RFC3339 time format, GMT
-    days          = null # integer >= 0
-    storage_class = null # string/enum, one of GLACIER, STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, DEEP_ARCHIVE, GLACIER_IR.
-  }]
-  noncurrent_version_transition = [{
-    newer_noncurrent_versions = null # integer >= 0
-    noncurrent_days           = null # integer >= 0
-    storage_class             = null # string/enum, one of GLACIER, STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, DEEP_ARCHIVE, GLACIER_IR.
-  }]
-}
-We only partly specify the object to allow for compatible future extension.
-*/
-
 variable "lifecycle_configuration_rules" {
   type = list(object({
-    enabled = bool
+    enabled = optional(bool, true)
     id      = string
 
-    abort_incomplete_multipart_upload_days = number
+    abort_incomplete_multipart_upload_days = optional(number)
 
     # `filter_and` is the `and` configuration block inside the `filter` configuration.
     # This is the only place you should specify a prefix.
-    filter_and = any
-    expiration = any
-    transition = list(any)
+    filter_and = optional(object({
+      object_size_greater_than = optional(number) # integer >= 0
+      object_size_less_than    = optional(number) # integer >= 1
+      prefix                   = optional(string)
+      tags                     = optional(map(string), {})
+    }))
+    expiration = optional(object({
+      date                         = optional(string) # string, RFC3339 time format, GMT
+      days                         = optional(number) # integer > 0
+      expired_object_delete_marker = optional(bool)
+    }))
+    noncurrent_version_expiration = optional(object({
+      newer_noncurrent_versions = optional(number) # integer > 0
+      noncurrent_days           = optional(number) # integer >= 0
+    }))
+    transition = optional(list(object({
+      date          = optional(string) # string, RFC3339 time format, GMT
+      days          = optional(number) # integer > 0
+      storage_class = optional(string)
+      # string/enum, one of GLACIER, STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, DEEP_ARCHIVE, GLACIER_IR.
+    })), [])
 
-    noncurrent_version_expiration = any
-    noncurrent_version_transition = list(any)
+    noncurrent_version_transition = optional(list(object({
+      newer_noncurrent_versions = optional(number) # integer >= 0
+      noncurrent_days           = optional(number) # integer >= 0
+      storage_class             = optional(string)
+      # string/enum, one of GLACIER, STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, DEEP_ARCHIVE, GLACIER_IR.
+    })), [])
   }))
   default     = []
   description = "A list of lifecycle V2 rules"
+  nullable    = false
 }
 
 variable "cors_configuration" {
