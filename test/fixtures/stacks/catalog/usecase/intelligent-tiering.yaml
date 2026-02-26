@@ -1,0 +1,27 @@
+components:
+  terraform:
+    s3-bucket/intelligent-tiering:
+      metadata:
+        component: target
+      vars:
+        enabled: true
+        account_map_tenant_name: core
+        user_enabled: false
+        acl: "private"
+        grants: null
+        force_destroy: true
+        versioning_enabled: false
+        allow_encrypted_uploads_only: true
+        block_public_acls: true
+        block_public_policy: true
+        ignore_public_acls: true
+        restrict_public_buckets: true
+        allow_ssl_requests_only: true
+        lifecycle_configuration_rules: []
+        intelligent_tiering_configuration:
+          - name: archive-config
+            tiering:
+              - access_tier: ARCHIVE_ACCESS
+                days: 180
+              - access_tier: DEEP_ARCHIVE_ACCESS
+                days: 365
