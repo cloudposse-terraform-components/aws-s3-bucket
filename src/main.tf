@@ -36,7 +36,8 @@ module "bucket_policy" {
 }
 
 module "s3_bucket" {
-  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket.git?ref=add-intelligent-tiering-configuration"
+  source  = "cloudposse/s3-bucket/aws"
+  version = "4.10.0"
 
   bucket_name = var.bucket_name
 
@@ -73,7 +74,8 @@ module "s3_bucket" {
   lifecycle_configuration_rules = var.lifecycle_configuration_rules
 
   # Intelligent-Tiering archive configuration
-  intelligent_tiering_configuration = var.intelligent_tiering_configuration
+  # TODO: Uncomment after upgrading module to include intelligent tiering support
+  # intelligent_tiering_configuration = var.intelligent_tiering_configuration
 
   # Object encryption
   sse_algorithm      = var.sse_algorithm
