@@ -3,3 +3,4 @@ import:
   - catalog/usecase/basic
   - catalog/usecase/disabled
   - catalog/usecase/event-notifications
+  - catalog/usecase/intelligent-tiering

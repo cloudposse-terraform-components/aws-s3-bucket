@@ -51,6 +51,17 @@ type BucketPolicy struct {
 	} `json:"Statement"`
 }
 
+type IntelligentTieringConfig struct {
+	Name    string
+	Status  string
+	Tiers   []IntelligentTieringTier
+}
+
+type IntelligentTieringTier struct {
+	AccessTier string
+	Days       int32
+}
+
 type EventNotificationConfig struct {
 	EventBridgeConfiguration     bool
 	LambdaFunctionConfigurations []string
@@ -171,6 +182,67 @@ func getS3BucketEventNotification(t *testing.T, region string, bucketName string
 	}
 
 	return config
+}
+
+func getS3BucketIntelligentTieringConfigs(t *testing.T, region string, bucketName string) []IntelligentTieringConfig {
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	require.NoError(t, err)
+
+	client := s3.NewFromConfig(cfg)
+	result, err := client.ListBucketIntelligentTieringConfigurations(ctx, &s3.ListBucketIntelligentTieringConfigurationsInput{
+		Bucket: &bucketName,
+	})
+	require.NoError(t, err)
+
+	var configs []IntelligentTieringConfig
+	for _, c := range result.IntelligentTieringConfigurationList {
+		itc := IntelligentTieringConfig{
+			Name:   *c.Id,
+			Status: string(c.Status),
+		}
+		for _, tier := range c.Tierings {
+			days := int32(0)
+			if tier.Days != nil {
+				days = *tier.Days
+			}
+			itc.Tiers = append(itc.Tiers, IntelligentTieringTier{
+				AccessTier: string(tier.AccessTier),
+				Days:       days,
+			})
+		}
+		configs = append(configs, itc)
+	}
+	return configs
+}
+
+func (s *ComponentSuite) TestIntelligentTiering() {
+	const component = "s3-bucket/intelligent-tiering"
+	const stack = "default-test"
+	const awsRegion = "us-east-2"
+
+	defer s.DestroyAtmosComponent(s.T(), component, stack, nil)
+	options, _ := s.DeployAtmosComponent(s.T(), component, stack, nil)
+	assert.NotNil(s.T(), options)
+
+	bucketID := atmos.Output(s.T(), options, "bucket_id")
+	assert.NotEmpty(s.T(), bucketID)
+
+	configs := getS3BucketIntelligentTieringConfigs(s.T(), awsRegion, bucketID)
+	require.Len(s.T(), configs, 1)
+
+	assert.Equal(s.T(), "archive-config", configs[0].Name)
+	assert.Equal(s.T(), "Enabled", configs[0].Status)
+	require.Len(s.T(), configs[0].Tiers, 2)
+
+	tierMap := make(map[string]int32)
+	for _, tier := range configs[0].Tiers {
+		tierMap[tier.AccessTier] = tier.Days
+	}
+	assert.Equal(s.T(), int32(180), tierMap["ARCHIVE_ACCESS"])
+	assert.Equal(s.T(), int32(365), tierMap["DEEP_ARCHIVE_ACCESS"])
+
+	s.DriftTest(component, stack, nil)
 }
 
 func (s *ComponentSuite) TestEventNotifications() {
