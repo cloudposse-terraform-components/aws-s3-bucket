@@ -10,5 +10,9 @@ terraform {
       source  = "cloudposse/template"
       version = ">= 2.2.0"
     }
+    utils = {
+      source  = "cloudposse/utils"
+      version = ">= 2.0.0, < 3.0.0"
+    }
   }
 }
