@@ -18,6 +18,20 @@ components:
         ignore_public_acls: true
         restrict_public_buckets: true
         allow_ssl_requests_only: true
+        # Exercises the `templatestring()` substitution in `local.bucket_policy`.
+        # `${id}` must resolve to `module.this.id` (the bucket name) in the
+        # rendered bucket policy.
+        iam_policy_statements:
+          - sid: TestIdSubstitution
+            effect: Deny
+            actions:
+              - s3:DeleteBucket
+            resources:
+              - "arn:aws:s3:::${id}"
+            principals:
+              - type: AWS
+                identifiers:
+                  - "arn:aws:iam::000000000000:root"
         lifecycle_configuration_rules:
           - id: default
             enabled: true
