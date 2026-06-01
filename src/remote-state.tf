@@ -1,6 +1,6 @@
 module "account_map" {
   source  = "cloudposse/stack-config/yaml//modules/remote-state"
-  version = "1.8.0"
+  version = "2.0.0"
 
   component   = var.account_map_component_name
   environment = var.account_map_enabled ? var.account_map_environment_name : ""

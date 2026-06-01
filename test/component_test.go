@@ -105,6 +105,7 @@ func (s *ComponentSuite) TestBasic() {
 	var policy BucketPolicy
 	json.Unmarshal([]byte(policyString), &policy)
 
+	foundIdSubstitution := false
 	for _, statement := range policy.Statement {
 		switch statement.Sid {
 		case "DenyIncorrectEncryptionHeader":
@@ -125,8 +126,23 @@ func (s *ComponentSuite) TestBasic() {
 				fmt.Sprintf("arn:aws:s3:::%s", bucketID),
 			}, statement.Resource)
 			assert.Equal(s.T(), false, statement.Condition.Bool["aws:SecureTransport"])
+		case "TestIdSubstitution":
+			// Verifies that `templatestring()` substituted `${id}` in the
+			// custom `iam_policy_statements` with the actual bucket id.
+			expectedArn := fmt.Sprintf("arn:aws:s3:::%s", bucketID)
+			switch r := statement.Resource.(type) {
+			case string:
+				assert.Equal(s.T(), expectedArn, r)
+			case []interface{}:
+				require.Len(s.T(), r, 1)
+				assert.Equal(s.T(), expectedArn, r[0])
+			default:
+				s.T().Fatalf("unexpected Resource type in TestIdSubstitution: %T", r)
+			}
+			foundIdSubstitution = true
 		}
 	}
+	assert.True(s.T(), foundIdSubstitution, "expected TestIdSubstitution statement in bucket policy (iam_policy_statements with ${id} placeholder)")
 
 	s.DriftTest(component, stack, nil)
 }
