@@ -290,6 +290,12 @@ variable "bucket_name" {
   description = "Bucket name. If provided, the bucket will be created with this name instead of generating the name from the context"
 }
 
+variable "object_lock_enabled" {
+  type        = bool
+  default     = false
+  description = "Set to `true` to enable S3 Object Lock on the bucket without configuring a default retention rule, so objects are only protected when a retention period or legal hold is applied per object. Object Lock is also enabled implicitly when `object_lock_configuration` is set. Enabling Object Lock requires versioning and can only be done at bucket creation."
+}
+
 variable "object_lock_configuration" {
   type = object({
     mode  = string # Valid values are GOVERNANCE and COMPLIANCE.
@@ -297,7 +303,20 @@ variable "object_lock_configuration" {
     years = number
   })
   default     = null
-  description = "A configuration for S3 object locking. With S3 Object Lock, you can store objects using a `write once, read many` (WORM) model. Object Lock can help prevent objects from being deleted or overwritten for a fixed amount of time or indefinitely."
+  description = "A configuration for S3 object locking with a bucket-wide default retention rule. With S3 Object Lock, you can store objects using a `write once, read many` (WORM) model. Object Lock can help prevent objects from being deleted or overwritten for a fixed amount of time or indefinitely. To enable Object Lock without a default retention rule, leave this `null` and set `object_lock_enabled = true` instead."
+}
+
+variable "blocked_encryption_types" {
+  type        = list(string)
+  default     = null
+  description = <<-EOT
+  List of encryption types to block on the bucket, passed to the `rule` block of
+  `aws_s3_bucket_server_side_encryption_configuration`.
+
+  Defaults to `null` (attribute omitted). On `hashicorp/aws` provider >= 6.22.0, AWS's `GetBucketEncryption`
+  returns `blocked_encryption_types = ["NONE"]` by default; if a bucket already has a value set in AWS, set this
+  to match it to avoid perpetual in-place diffs on `aws_s3_bucket_server_side_encryption_configuration`.
+  EOT
 }
 
 # Need input to be a list to fix https://github.com/cloudposse/terraform-aws-s3-bucket/issues/102
