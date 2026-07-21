@@ -33,7 +33,7 @@ module "bucket_policy" {
 
 module "s3_bucket" {
   source  = "cloudposse/s3-bucket/aws"
-  version = "4.11.0"
+  version = "4.15.0"
 
   bucket_name = var.bucket_name
 
@@ -65,6 +65,7 @@ module "s3_bucket" {
   versioning_enabled            = var.versioning_enabled
   force_destroy                 = var.force_destroy
   object_lock_configuration     = var.object_lock_configuration
+  object_lock_enabled           = var.object_lock_enabled
 
   # Object lifecycle rules
   lifecycle_configuration_rules = var.lifecycle_configuration_rules
@@ -73,9 +74,10 @@ module "s3_bucket" {
   intelligent_tiering_configuration = var.intelligent_tiering_configuration
 
   # Object encryption
-  sse_algorithm      = var.sse_algorithm
-  kms_master_key_arn = var.kms_master_key_arn
-  bucket_key_enabled = var.bucket_key_enabled
+  sse_algorithm            = var.sse_algorithm
+  kms_master_key_arn       = var.kms_master_key_arn
+  bucket_key_enabled       = var.bucket_key_enabled
+  blocked_encryption_types = var.blocked_encryption_types
 
   # Object replication
   s3_replication_enabled      = var.s3_replication_enabled

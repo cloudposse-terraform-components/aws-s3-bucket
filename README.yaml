@@ -74,6 +74,28 @@ usage: |-
             prefix: logs/
   ```
 
+  A WORM (write-once-read-many) bucket that enables S3 Object Lock without a
+  bucket-wide default retention rule, so retention periods or legal holds are
+  applied per object at write time:
+
+  ```yaml
+  import:
+    - catalog/s3/defaults
+
+  components:
+    terraform:
+      worm-bucket:
+        metadata:
+          component: s3-bucket
+          inherits:
+            - s3-bucket-defaults
+        vars:
+          enabled: true
+          name: worm
+          versioning_enabled: true # required by Object Lock
+          object_lock_enabled: true
+  ```
+
   <!-- prettier-ignore-start -->
   <!-- prettier-ignore-end -->
 references:
